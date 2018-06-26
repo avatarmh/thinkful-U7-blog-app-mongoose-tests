@@ -1,4 +1,9 @@
 language: node_js
 node_js: node
-services:
-- mongodb
+deploy:
+  provider: heroku
+  api_key:
+    secure: n2vmUnmXGtrF9LEkvQutSbqTnqRKTkWh3Rf6hV+iyYd0QvZvBzDK+xS6BUOVxWbtDYdDMkRc46boUJI7MAeIekv6qfjyO1acrQ9xZxA44dLittkEMLkvFrS/MuO+Hl3b55l6pV4Ggj5uzmrW1BddPrLvVgDJhLXIZJky6ontgzti2CZf/Yus9CVdScGeYfrrcekH188xjz8NHF098a91YphThJcIp2DBMAX7pRVUU2kd1YXvQvbUPgbOVRymh94ZB7wrtwjTlLiuKlbVtRbiM9bMey8ztrE0r+PQgW/5KMSkOcfFS/wm+0+aoj06hw5k1MGxX+Cq+rYu5Xd2Zph/F1PRZw2HgciDuxt+JZDaTHv0BqIRXud8xcGK7wcuNPvjUCx8Mie4mDLAR6gUdwgOctD2AfY/QRPP4FQ7RJlOmzPC3A7j5CiQ6z4rg0qVT5F6+OmeUKkAZyoFTuDE0g8+GcxXUNQoIdM4NfMIF2NNyxx2rsDqvJQZfZGtooM3AykfGKdpRt5rnZfJ/upuX0W+eshhIw777YPYyTqxa4qqKn3+UXinWHXmjGJgmNydYW7XTiI413xxPoXkjxTdMiJvuezdg2cJK1XLPHM6hg8A+lr7lVVmwZNCSpxSRMybat99QzIk8XluFAO5G9YReVob1PkY5J5lyZ5MB7mkzfaxzA0=
+  app: young-atoll-68003
+  on:
+    repo: avatarmh/thinkful-u7-blog-app-mongoose-test-challenge

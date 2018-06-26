@@ -42,7 +42,7 @@ function generateBlogPostData() {
       firstName: faker.name.firstName(),
       lastName: faker.name.lastName()
     },
-//    created: faker.date.recent()
+      created: faker.date.recent()
   };
 }
 
@@ -82,7 +82,7 @@ describe('BlogPost API resource', function () {
   // on proving something small
   describe('GET endpoint', function () {
 
-    it.only('should return all existing blog posts', function () {
+    it('should return all existing blog posts', function () {
       // strategy:
       //    1. get back all blog posts returned by by GET request to `/posts`
       //    2. prove res has right status, data type
@@ -105,10 +105,10 @@ describe('BlogPost API resource', function () {
         .then(function (count) {
           expect(res.body).to.have.lengthOf(count);
         });
-    }); 
+    });
 
 
-    it.only('should return blogposts with right fields', function () {
+    it('should return blogposts with right fields', function () {
       // Strategy: Get back all blogposts, and ensure they have expected keys
 
       let resBlogPost;
@@ -117,9 +117,9 @@ describe('BlogPost API resource', function () {
         .then(function (res) {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
-         expect(res.body).to.be.a('array');
           expect(res.body).to.be.a('array');
-         expect(res.body).to.have.lengthOf.at.least(1);
+          expect(res.body).to.be.a('array');
+          expect(res.body).to.have.lengthOf.at.least(1);
 
           // res.body.blogposts.forEach(function (blogpost) {
           res.body.forEach(function (blogpost) {
@@ -137,18 +137,18 @@ describe('BlogPost API resource', function () {
           expect(resBlogPost.author).to.equal(blogpost.authorName);
           expect(resBlogPost.content).to.equal(blogpost.content);
           expect(resBlogPost.title).to.equal(blogpost.title);
-//          expect(resBlogPost.created).to.contain(blogpost.created);
-          expect(new Date(resBlogPost.created)).to.contain(new Date(blogpost.created));
+          // expect(resBlogPost.created).to.contain(blogpost.created);
+          // expect(new Date(resBlogPost.created)).to.contain(new Date(blogpost.created));
         });
     });
   });
 
-  describe.only('POST endpoint', function () {
+  describe('POST endpoint', function () {
     // strategy: make a POST request with data,
     // then prove that the blog posts we get back has
     // right keys, and that `id` is there (which means
     // the data was inserted into db)
-    it.only('should add a new blog posts', function () {
+    it('should add a new blog posts', function () {
 
       const newBlogPost = generateBlogPostData();
 
@@ -166,7 +166,7 @@ describe('BlogPost API resource', function () {
           // console.log(`res.body.authorName=${res.body.authorName}`);
           // expect(res.body).to.equal(newBlogPost.author);
           expect(res.body.author).to.equal(
-          `${newBlogPost.author.firstName} ${newBlogPost.author.lastName}`);
+            `${newBlogPost.author.firstName} ${newBlogPost.author.lastName}`);
           // cause Mongo should have created id on insertion
           expect(res.body.id).to.not.be.null;
           expect(res.body.content).to.equal(newBlogPost.content);
@@ -179,9 +179,9 @@ describe('BlogPost API resource', function () {
           expect(blogpost.author.lastName).to.equal(newBlogPost.author.lastName);
           expect(blogpost.content).to.equal(newBlogPost.content);
           expect(blogpost.title).to.equal(newBlogPost.title);
-        //   console.log(`blogpost.created = ${blogpost.created}`);
-        //   console.log(`newBlogPost.created = ${newBlogPost.created}`);
-        //   expect(new Date(blogpost.created)).to.equal(new Date(newBlogPost.created));
+          console.log(`blogpost.created = ${blogpost.created}`);
+          console.log(`newBlogPost.created = ${newBlogPost.created}`);
+          // expect(new Date(blogpost.created)).to.equal(new Date(newBlogPost.created));
         });
     });
   });
@@ -193,7 +193,7 @@ describe('BlogPost API resource', function () {
     //  2. Make a PUT request to update that blogpost
     //  3. Prove blogpost returned by request contains data we sent
     //  4. Prove blogpost in db is correctly updated
-    it.only('should update fields you send over', function () {
+    it('should update fields you send over', function () {
       const updateData = {
         author: {
           firstName: 'newFN',
@@ -229,26 +229,26 @@ describe('BlogPost API resource', function () {
 
   describe('DELETE endpoint', function () {
     // strategy:
-    //  1. get a restaurant
-    //  2. make a DELETE request for that restaurant's id
+    //  1. get a blogpost
+    //  2. make a DELETE request for that blogpost by id
     //  3. assert that response has right status code
-    //  4. prove that restaurant with the id doesn't exist in db anymore
-    it('delete a restaurant by id', function () {
+    //  4. prove that blogpost with the id doesn't exist in db anymore
+    it('delete a blogpost by id', function () {
 
-      let restaurant;
+      let blogpost;
 
-      return Restaurant
+      return BlogPost
         .findOne()
-        .then(function (_restaurant) {
-          restaurant = _restaurant;
-          return chai.request(app).delete(`/restaurants/${restaurant.id}`);
+        .then(function (_blogpost) {
+          blogpost = _blogpost;
+          return chai.request(app).delete(`/posts/${blogpost.id}`);
         })
         .then(function (res) {
           expect(res).to.have.status(204);
-          return Restaurant.findById(restaurant.id);
+          return BlogPost.findById(blogpost.id);
         })
-        .then(function (_restaurant) {
-          expect(_restaurant).to.be.null;
+        .then(function (_blogpost) {
+          expect(_blogpost).to.be.null;
         });
     });
   });

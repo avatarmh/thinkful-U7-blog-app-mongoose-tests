@@ -9,9 +9,9 @@ const mongoose = require('mongoose');
 // this module
 const expect = chai.expect;
 
-const {Restaurant} = require('../models');
-const {app, runServer, closeServer} = require('../server');
-const {TEST_DATABASE_URL} = require('../config');
+const { BlogPost } = require('../models');
+const { app, runServer, closeServer } = require('../server');
+const { TEST_DATABASE_URL } = require('../config');
 
 chai.use(chaiHttp);
 
@@ -20,57 +20,31 @@ chai.use(chaiHttp);
 // we use the Faker library to automatically
 // generate placeholder values for author, title, content
 // and then we insert that data into mongo
-function seedRestaurantData() {
-  console.info('seeding restaurant data');
+function seedBlogPostData() {
+  console.info('seeding blog post data');
   const seedData = [];
 
-  for (let i=1; i<=10; i++) {
-    seedData.push(generateRestaurantData());
+  for (let i = 1; i <= 10; i++) {
+    seedData.push(generateBlogPostData());
   }
   // this will return a promise
-  return Restaurant.insertMany(seedData);
+  return BlogPost.insertMany(seedData);
 }
 
-// used to generate data to put in db
-function generateBoroughName() {
-  const boroughs = [
-    'Manhattan', 'Queens', 'Brooklyn', 'Bronx', 'Staten Island'];
-  return boroughs[Math.floor(Math.random() * boroughs.length)];
-}
-
-// used to generate data to put in db
-function generateCuisineType() {
-  const cuisines = ['Italian', 'Thai', 'Colombian'];
-  return cuisines[Math.floor(Math.random() * cuisines.length)];
-}
-
-// used to generate data to put in db
-function generateGrade() {
-  const grades = ['A', 'B', 'C', 'D', 'F'];
-  const grade = grades[Math.floor(Math.random() * grades.length)];
-  return {
-    date: faker.date.past(),
-    grade: grade
-  };
-}
-
-// generate an object represnting a restaurant.
+// generate an object represnting a blog post.
 // can be used to generate seed data for db
 // or request.body data
-function generateRestaurantData() {
+function generateBlogPostData() {
   return {
-    name: faker.company.companyName(),
-    borough: generateBoroughName(),
-    cuisine: generateCuisineType(),
-    address: {
-      building: faker.address.streetAddress(),
-      street: faker.address.streetName(),
-      zipcode: faker.address.zipCode()
+    title: faker.lorem.sentence(),
+    content: faker.lorem.paragraph(),
+    author: {
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName()
     },
-    grades: [generateGrade(), generateGrade(), generateGrade()]
+//    created: faker.date.recent()
   };
 }
-
 
 // this function deletes the entire database.
 // we'll call it in an `afterEach` block below
@@ -81,192 +55,199 @@ function tearDownDb() {
   return mongoose.connection.dropDatabase();
 }
 
-describe('Restaurants API resource', function() {
+describe('BlogPost API resource', function () {
 
   // we need each of these hook functions to return a promise
   // otherwise we'd need to call a `done` callback. `runServer`,
-  // `seedRestaurantData` and `tearDownDb` each return a promise,
+  // `seedBlogPostData` and `tearDownDb` each return a promise,
   // so we return the value returned by these function calls.
-  before(function() {
+  before(function () {
     return runServer(TEST_DATABASE_URL);
   });
 
-  beforeEach(function() {
-    return seedRestaurantData();
+  beforeEach(function () {
+    return seedBlogPostData();
   });
 
-  afterEach(function() {
+  afterEach(function () {
     return tearDownDb();
   });
 
-  after(function() {
+  after(function () {
     return closeServer();
   });
 
   // note the use of nested `describe` blocks.
   // this allows us to make clearer, more discrete tests that focus
   // on proving something small
-  describe('GET endpoint', function() {
+  describe('GET endpoint', function () {
 
-    it('should return all existing restaurants', function() {
+    it.only('should return all existing blog posts', function () {
       // strategy:
-      //    1. get back all restaurants returned by by GET request to `/restaurants`
+      //    1. get back all blog posts returned by by GET request to `/posts`
       //    2. prove res has right status, data type
-      //    3. prove the number of restaurants we got back is equal to number
+      //    3. prove the number of posts we got back is equal to number
       //       in db.
       //
       // need to have access to mutate and access `res` across
       // `.then()` calls below, so declare it here so can modify in place
       let res;
       return chai.request(app)
-        .get('/restaurants')
-        .then(function(_res) {
+        .get('/posts')
+        .then(function (_res) {
           // so subsequent .then blocks can access response object
           res = _res;
           expect(res).to.have.status(200);
           // otherwise our db seeding didn't work
-          expect(res.body.restaurants).to.have.lengthOf.at.least(1);
-          return Restaurant.count();
+          expect(res.body).to.have.lengthOf.at.least(1);
+          return BlogPost.count();
         })
-        .then(function(count) {
-          expect(res.body.restaurants).to.have.lengthOf(count);
+        .then(function (count) {
+          expect(res.body).to.have.lengthOf(count);
         });
-    });
+    }); 
 
 
-    it('should return restaurants with right fields', function() {
-      // Strategy: Get back all restaurants, and ensure they have expected keys
+    it.only('should return blogposts with right fields', function () {
+      // Strategy: Get back all blogposts, and ensure they have expected keys
 
-      let resRestaurant;
+      let resBlogPost;
       return chai.request(app)
-        .get('/restaurants')
-        .then(function(res) {
+        .get('/posts')
+        .then(function (res) {
           expect(res).to.have.status(200);
           expect(res).to.be.json;
-          expect(res.body.restaurants).to.be.a('array');
-          expect(res.body.restaurants).to.have.lengthOf.at.least(1);
+         expect(res.body).to.be.a('array');
+          expect(res.body).to.be.a('array');
+         expect(res.body).to.have.lengthOf.at.least(1);
 
-          res.body.restaurants.forEach(function(restaurant) {
-            expect(restaurant).to.be.a('object');
-            expect(restaurant).to.include.keys(
-              'id', 'name', 'cuisine', 'borough', 'grade', 'address');
+          // res.body.blogposts.forEach(function (blogpost) {
+          res.body.forEach(function (blogpost) {
+            expect(blogpost).to.be.a('object');
+            expect(blogpost).to.include.keys(
+              'id', 'author', 'content', 'title', 'created');
           });
-          resRestaurant = res.body.restaurants[0];
-          return Restaurant.findById(resRestaurant.id);
+          resBlogPost = res.body[0];
+          console.log(`resBlogPost = ${resBlogPost}`)
+          return BlogPost.findById(resBlogPost.id);
         })
-        .then(function(restaurant) {
+        .then(function (blogpost) {
 
-          expect(resRestaurant.id).to.equal(restaurant.id);
-          expect(resRestaurant.name).to.equal(restaurant.name);
-          expect(resRestaurant.cuisine).to.equal(restaurant.cuisine);
-          expect(resRestaurant.borough).to.equal(restaurant.borough);
-          expect(resRestaurant.address).to.contain(restaurant.address.building);
-
-          expect(resRestaurant.grade).to.equal(restaurant.grade);
+          expect(resBlogPost.id).to.equal(blogpost.id);
+          expect(resBlogPost.author).to.equal(blogpost.authorName);
+          expect(resBlogPost.content).to.equal(blogpost.content);
+          expect(resBlogPost.title).to.equal(blogpost.title);
+//          expect(resBlogPost.created).to.contain(blogpost.created);
+          expect(new Date(resBlogPost.created)).to.contain(new Date(blogpost.created));
         });
     });
   });
 
-  describe('POST endpoint', function() {
+  describe.only('POST endpoint', function () {
     // strategy: make a POST request with data,
-    // then prove that the restaurant we get back has
+    // then prove that the blog posts we get back has
     // right keys, and that `id` is there (which means
     // the data was inserted into db)
-    it('should add a new restaurant', function() {
+    it.only('should add a new blog posts', function () {
 
-      const newRestaurant = generateRestaurantData();
-      let mostRecentGrade;
+      const newBlogPost = generateBlogPostData();
 
       return chai.request(app)
-        .post('/restaurants')
-        .send(newRestaurant)
-        .then(function(res) {
+        .post('/posts')
+        .send(newBlogPost)
+        .then(function (res) {
           expect(res).to.have.status(201);
           expect(res).to.be.json;
           expect(res.body).to.be.a('object');
           expect(res.body).to.include.keys(
-            'id', 'name', 'cuisine', 'borough', 'grade', 'address');
-          expect(res.body.name).to.equal(newRestaurant.name);
+            'id', 'author', 'content', 'title', 'created');
+          // console.log(`newBlogPost = ${newBlogPost.author.firstName}`);
+          // console.log(`newBlogPost = ${newBlogPost.author.lastName}`);
+          // console.log(`res.body.authorName=${res.body.authorName}`);
+          // expect(res.body).to.equal(newBlogPost.author);
+          expect(res.body.author).to.equal(
+          `${newBlogPost.author.firstName} ${newBlogPost.author.lastName}`);
           // cause Mongo should have created id on insertion
           expect(res.body.id).to.not.be.null;
-          expect(res.body.cuisine).to.equal(newRestaurant.cuisine);
-          expect(res.body.borough).to.equal(newRestaurant.borough);
+          expect(res.body.content).to.equal(newBlogPost.content);
+          expect(res.body.title).to.equal(newBlogPost.title);
 
-          mostRecentGrade = newRestaurant.grades.sort(
-            (a, b) => b.date - a.date)[0].grade;
-
-          expect(res.body.grade).to.equal(mostRecentGrade);
-          return Restaurant.findById(res.body.id);
+          return BlogPost.findById(res.body.id);
         })
-        .then(function(restaurant) {
-          expect(restaurant.name).to.equal(newRestaurant.name);
-          expect(restaurant.cuisine).to.equal(newRestaurant.cuisine);
-          expect(restaurant.borough).to.equal(newRestaurant.borough);
-          expect(restaurant.grade).to.equal(mostRecentGrade);
-          expect(restaurant.address.building).to.equal(newRestaurant.address.building);
-          expect(restaurant.address.street).to.equal(newRestaurant.address.street);
-          expect(restaurant.address.zipcode).to.equal(newRestaurant.address.zipcode);
+        .then(function (blogpost) {
+          expect(blogpost.author.firstName).to.equal(newBlogPost.author.firstName);
+          expect(blogpost.author.lastName).to.equal(newBlogPost.author.lastName);
+          expect(blogpost.content).to.equal(newBlogPost.content);
+          expect(blogpost.title).to.equal(newBlogPost.title);
+        //   console.log(`blogpost.created = ${blogpost.created}`);
+        //   console.log(`newBlogPost.created = ${newBlogPost.created}`);
+        //   expect(new Date(blogpost.created)).to.equal(new Date(newBlogPost.created));
         });
     });
   });
 
-  describe('PUT endpoint', function() {
+  describe('PUT endpoint', function () {
 
     // strategy:
-    //  1. Get an existing restaurant from db
-    //  2. Make a PUT request to update that restaurant
-    //  3. Prove restaurant returned by request contains data we sent
-    //  4. Prove restaurant in db is correctly updated
-    it('should update fields you send over', function() {
+    //  1. Get an existing blogpost from db
+    //  2. Make a PUT request to update that blogpost
+    //  3. Prove blogpost returned by request contains data we sent
+    //  4. Prove blogpost in db is correctly updated
+    it.only('should update fields you send over', function () {
       const updateData = {
-        name: 'fofofofofofofof',
-        cuisine: 'futuristic fusion'
+        author: {
+          firstName: 'newFN',
+          lastName: 'newLN'
+        },
+        content: 'Dies irae, Dies illa, Solvet saeclum en favilla, Teste davidcum sybilla.',
+        title: 'Requiem Massa'
       };
 
-      return Restaurant
+      return BlogPost
         .findOne()
-        .then(function(restaurant) {
-          updateData.id = restaurant.id;
+        .then(function (blogpost) {
+          updateData.id = blogpost.id;
 
           // make request then inspect it to make sure it reflects
           // data we sent
           return chai.request(app)
-            .put(`/restaurants/${restaurant.id}`)
+            .put(`/posts/${blogpost.id}`)
             .send(updateData);
         })
-        .then(function(res) {
+        .then(function (res) {
           expect(res).to.have.status(204);
-
-          return Restaurant.findById(updateData.id);
+          return BlogPost.findById(updateData.id);
         })
-        .then(function(restaurant) {
-          expect(restaurant.name).to.equal(updateData.name);
-          expect(restaurant.cuisine).to.equal(updateData.cuisine);
+        .then(function (blogpost) {
+          expect(blogpost.author.firstName).to.equal(updateData.author.firstName);
+          expect(blogpost.author.lastName).to.equal(updateData.author.lastName);
+          expect(blogpost.content).to.equal(updateData.content);
+          expect(blogpost.title).to.equal(updateData.title);
         });
     });
   });
 
-  describe('DELETE endpoint', function() {
+  describe('DELETE endpoint', function () {
     // strategy:
     //  1. get a restaurant
     //  2. make a DELETE request for that restaurant's id
     //  3. assert that response has right status code
     //  4. prove that restaurant with the id doesn't exist in db anymore
-    it('delete a restaurant by id', function() {
+    it('delete a restaurant by id', function () {
 
       let restaurant;
 
       return Restaurant
         .findOne()
-        .then(function(_restaurant) {
+        .then(function (_restaurant) {
           restaurant = _restaurant;
           return chai.request(app).delete(`/restaurants/${restaurant.id}`);
         })
-        .then(function(res) {
+        .then(function (res) {
           expect(res).to.have.status(204);
           return Restaurant.findById(restaurant.id);
         })
-        .then(function(_restaurant) {
+        .then(function (_restaurant) {
           expect(_restaurant).to.be.null;
         });
     });
